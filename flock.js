@@ -27,8 +27,11 @@ function setup() {
 }
 
 let animIndex = 0;
+let tankproportion = 8;
 function draw() {
-  background(0, 102, 120);
+  background(133, 133, 133);
+  fill(0, 102, 133);
+  rect(width/tankproportion, height/tankproportion, width-2*(width/tankproportion), height-2*(height/tankproportion));
   if (drawFood) circle(food[0], food[1], food[2]);
   animIndex+= 0.2;
   if (animIndex >= 2) animIndex = 0;
