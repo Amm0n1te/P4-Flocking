@@ -1,11 +1,11 @@
 let flock;
 let spritesheet;
 let animation = [];
-let food = [-1, -1, 10];
+let food = [-1, -1, 10];   //food[x position,  y position,  pellet radius]
 let drawFood = false;
 
 function preload() {
-  //frameRate(10);
+  //frameRate(3);
   spritesheet = loadImage("fish_spritesheet.png");
   spritesheet.resize(5, 10);
   //spritedata = loadJSON("fish.json");
@@ -20,7 +20,7 @@ function setup() {
 
   flock = new Flock();
   // Add an initial set of boids into the system
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 10; i++) {
     let b = new Boid(width / 2,height / 2);
     flock.addBoid(b);
   }
@@ -28,10 +28,20 @@ function setup() {
 
 let animIndex = 0;
 let tankproportion = 8;
+let tankup;
+let tankdown;
+let tankleft;
+let tankight;
 function draw() {
   background(133, 133, 133);
   fill(0, 102, 133);
+  tankup = height/tankproportion;
+  tankdown = height-(height/tankproportion);
+  tankleft = width/tankproportion;
+  tankright = width-(width/tankproportion);
   rect(width/tankproportion, height/tankproportion, width-2*(width/tankproportion), height-2*(height/tankproportion));
+  fill(82, 48, 2);
+  noStroke();
   if (drawFood) circle(food[0], food[1], food[2]);
   animIndex+= 0.2;
   if (animIndex >= 2) animIndex = 0;
@@ -49,9 +59,11 @@ function mouseDragged() {
 }
 
 function mouseClicked() {
-  drawFood = true;
-  food[0] = mouseX;
-  food[1] = mouseY;
+  if (mouseX > tankleft && mouseX < tankright && mouseY > tankup && mouseY < tankdown) {
+    drawFood = true;
+    food[0] = mouseX;
+    food[1] = mouseY;
+  }
 }
 
 // The Nature of Code
@@ -98,14 +110,38 @@ class Boid {
     this.flock(boids);
     //circle(450, height/2, 30);
     //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
-    let seekVector = createVector(food[0], food[1]);
-    seekVector.mult(100);
-    if (drawFood) this.applyForce(this.seek( seekVector ))
-    this.update();
-    //circle(450, height/2, 30);
-    //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
-    // this.borders();
-    this.render();
+
+    if (drawFood) {
+      push();
+      translate(this.position.x, this.position.y);
+      let rotateval = 0;
+      if (food[0] > this.position.x && food[1] < this.position.y) {
+        rotateval = Math.atan( Math.abs(this.position.x-food[0])/Math.abs(this.position.y-food[1]) );
+        //console.log("case 1");
+      }  
+      else if (food[0] > this.position.x && food[1] > this.position.y) {
+        rotateval = Math.atan( Math.abs(this.position.y-food[1])/Math.abs(this.position.x-food[0]) );
+        //console.log("case 2");
+        rotateval += Math.PI/2;
+      }
+      else if (food[0] < this.position.x && food[1] > this.position.y) {
+        rotateval = Math.atan( Math.abs(this.position.x-food[0])/Math.abs(this.position.y-food[1]) );
+        //console.log("case 3");
+        rotateval += Math.PI;
+      } 
+      else if (food[0] < this.position.x && food[1] < this.position.y) {
+        //console.log("case 4");
+        rotateval = Math.atan( Math.abs(this.position.y-food[1])/Math.abs(this.position.x-food[0]) );
+        rotateval += 3*Math.PI/2;
+      }
+      rotate(rotateval);
+      image(animation[floor(animIndex)], 0, 0)
+      pop();
+    }
+    else {
+      this.update();
+      this.render();
+    }
     let collisionRadius = 10;
     if (this.position.x < food[0]+collisionRadius && this.position.x > food[0]-collisionRadius && 
       this.position.y < food[1]+collisionRadius && this.position.y > food[1]-collisionRadius && drawFood == true) {
@@ -131,10 +167,10 @@ class Boid {
     coh.mult(1.0);
     avo.mult(3.0);
     // Add the force vectors to acceleration
-    this.applyForce(sep);
-    this.applyForce(ali);
-    this.applyForce(coh);
-    this.applyForce(avo);
+    if (!this.drawFood) this.applyForce(sep);
+    if (!this.drawFood)this.applyForce(ali);
+    if (!this.drawFood)this.applyForce(coh);
+    if (!this.drawFood)this.applyForce(avo);
   }
 
   update() {
@@ -170,11 +206,6 @@ class Boid {
     rotate(theta);
     animation[floor(animIndex)].resize(15,30);
     let fish = image(animation[floor(animIndex)], 0, 0);
-    /*beginShape();
-    vertex(0, -this.r * 2);
-    vertex(-this.r, this.r * 2);
-    vertex(this.r, this.r * 2);
-    endShape(CLOSE);*/
     pop();
   }
 
@@ -266,16 +297,16 @@ class Boid {
 
   avoid(boids) {
     let steer = createVector(0, 0);
-    if (this.position.x <= 0) {
+    if (this.position.x <= tankleft+20) {
       steer.add(createVector(1, 0));
     }
-    if (this.position.x > 640) { // width of canvas
+    if (this.position.x > tankright-20) {
       steer.add(createVector(-1, 0));
     }
-    if (this.position.y <= 0) {
+    if (this.position.y < tankup+20) {
       steer.add(createVector(0, 1));
     }
-    if (this.position.y > 360) { // height of canvas
+    if (this.position.y > tankdown-20) { 
       steer.add(createVector(0, -1));
     }
     return steer;
