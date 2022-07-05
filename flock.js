@@ -1,21 +1,39 @@
 let flock;
+let spritesheet;
+let animation = [];
+let food = [-1, -1, 10];
+let drawFood = false;
+
+function preload() {
+  //frameRate(10);
+  spritesheet = loadImage("fish_spritesheet.png");
+  spritesheet.resize(5, 10);
+  //spritedata = loadJSON("fish.json");
+}
+
 
 function setup() {
   createCanvas(640, 360);
   createP("Drag the mouse to generate new boids.");
+  animation.push(spritesheet.get(0, 0, 100, 200));
+  animation.push(spritesheet.get(100, 0, 100, 200));
 
   flock = new Flock();
   // Add an initial set of boids into the system
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 20; i++) {
     let b = new Boid(width / 2,height / 2);
     flock.addBoid(b);
   }
 }
 
-
+let animIndex = 0;
 function draw() {
-  background(51);
+  background(0, 102, 120);
+  if (drawFood) circle(food[0], food[1], food[2]);
+  animIndex+= 0.2;
+  if (animIndex >= 2) animIndex = 0;
   flock.run();
+  //image(spritesheet.get(100, 0, 100, 200), 0, 0);
 }
 
 
@@ -24,7 +42,13 @@ function draw() {
 
 // Add a new boid into the System
 function mouseDragged() {
-  flock.addBoid(new Boid(mouseX, mouseY));
+  //flock.addBoid(new Boid(mouseX, mouseY));
+}
+
+function mouseClicked() {
+  drawFood = true;
+  food[0] = mouseX;
+  food[1] = mouseY;
 }
 
 // The Nature of Code
@@ -69,9 +93,23 @@ class Boid {
 
   run(boids) {
     this.flock(boids);
+    //circle(450, height/2, 30);
+    //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
+    let seekVector = createVector(food[0], food[1]);
+    seekVector.mult(100);
+    if (drawFood) this.applyForce(this.seek( seekVector ))
     this.update();
+    //circle(450, height/2, 30);
+    //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
     // this.borders();
     this.render();
+    let collisionRadius = 10;
+    if (this.position.x < food[0]+collisionRadius && this.position.x > food[0]-collisionRadius && 
+      this.position.y < food[1]+collisionRadius && this.position.y > food[1]-collisionRadius && drawFood == true) {
+        drawFood = false;
+        console.log("chomp");
+      }
+    //console.log(this.position.x, " vs ", food[0]);
   }
 
   applyForce(force) {
@@ -102,7 +140,7 @@ class Boid {
     // Limit speed
     this.velocity.limit(this.maxspeed);
     this.position.add(this.velocity);
-    // Reset accelertion to 0 each cycle
+    // Reset acceleration to 0 each cycle
     this.acceleration.mult(0);
   }
 
@@ -127,11 +165,13 @@ class Boid {
     push();
     translate(this.position.x, this.position.y);
     rotate(theta);
-    beginShape();
+    animation[floor(animIndex)].resize(15,30);
+    let fish = image(animation[floor(animIndex)], 0, 0);
+    /*beginShape();
     vertex(0, -this.r * 2);
     vertex(-this.r, this.r * 2);
     vertex(this.r, this.r * 2);
-    endShape(CLOSE);
+    endShape(CLOSE);*/
     pop();
   }
 
@@ -154,8 +194,8 @@ class Boid {
       if ((d > 0) && (d < desiredseparation)) {
         // Calculate vector pointing away from neighbor
         let diff = p5.Vector.sub(this.position, boids[i].position);
-        diff.normalize();
-        diff.div(d);        // Weight by distance
+        diff.normalize();     //so we get only the direction
+        diff.div(d);          // multiply it by how far away it is from this.  closer applies stronger force, farther applies weaker force
         steer.add(diff);
         count++;            // Keep track of how many
       }
