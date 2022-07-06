@@ -5,7 +5,7 @@ let food = [-1, -1, 10];   //food[x position,  y position,  pellet radius]
 let drawFood = false;
 
 function preload() {
-  //frameRate(3);
+  //frameRate(5);
   spritesheet = loadImage("fish_spritesheet.png");
   spritesheet.resize(5, 10);
   //spritedata = loadJSON("fish.json");
@@ -20,7 +20,7 @@ function setup() {
 
   flock = new Flock();
   // Add an initial set of boids into the system
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 1; i++) {
     let b = new Boid(width / 2,height / 2);
     flock.addBoid(b);
   }
@@ -104,34 +104,50 @@ class Boid {
     this.r = 3.0;
     this.maxspeed = 3;    // Maximum speed
     this.maxforce = 0.05; // Maximum steering force
+    this.gotkonstant = false;
+    this.konstant = 1;
+    this.oldopposite = 1;
+    this.oldadjacent = 1;
   }
 
   run(boids) {
     this.flock(boids);
     //circle(450, height/2, 30);
     //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
-
-    if (drawFood) {
+    if (drawFood) {  
+      console.log(this.oldadjacent);
       push();
       translate(this.position.x, this.position.y);
       let rotateval = 0;
-      if (food[0] > this.position.x && food[1] < this.position.y) {
-        rotateval = Math.atan( Math.abs(this.position.x-food[0])/Math.abs(this.position.y-food[1]) );
+      let seekspeed = 1; //applied as a multiplier to default speed 1
+      let opposite = Math.abs(this.position.x - food[0]);
+      let adjacent = Math.abs(this.position.y - food[1]);
+      if (!this.gotkonstant) {
+        this.konstant = Math.sqrt(Math.pow(adjacent, 2) + Math.pow(opposite, 2));
+        this.oldopposite = Math.abs(this.position.x - food[0]);
+        this.oldadjacent = Math.abs(this.position.y - food[1]);
+        this.gotkonstant = true;
+      }
+      if (food[0] > this.position.x && food[1] < this.position.y) { //case 1: food top right
+        rotateval = Math.atan( opposite/adjacent );
+        this.position.x += (this.oldopposite/this.konstant) * seekspeed; 
+        this.position.y -= (this.oldadjacent/this.konstant) * seekspeed;
+        //this.position.y += (  this.position.y / Math.sqrt(Math.pow(this.position.x, 2) + Math.pow(this.position.y, 2))  ) * seekspeed;
         //console.log("case 1");
       }  
-      else if (food[0] > this.position.x && food[1] > this.position.y) {
-        rotateval = Math.atan( Math.abs(this.position.y-food[1])/Math.abs(this.position.x-food[0]) );
+      else if (food[0] > this.position.x && food[1] > this.position.y) { //case 2: food bottom right
+        rotateval = Math.atan( adjacent/opposite );
         //console.log("case 2");
         rotateval += Math.PI/2;
       }
-      else if (food[0] < this.position.x && food[1] > this.position.y) {
-        rotateval = Math.atan( Math.abs(this.position.x-food[0])/Math.abs(this.position.y-food[1]) );
+      else if (food[0] < this.position.x && food[1] > this.position.y) { //case 3: food bottom left
+        rotateval = Math.atan( opposite/adjacent );
         //console.log("case 3");
         rotateval += Math.PI;
       } 
-      else if (food[0] < this.position.x && food[1] < this.position.y) {
+      else if (food[0] < this.position.x && food[1] < this.position.y) { //case 4: food top left
         //console.log("case 4");
-        rotateval = Math.atan( Math.abs(this.position.y-food[1])/Math.abs(this.position.x-food[0]) );
+        rotateval = Math.atan( adjacent/opposite );
         rotateval += 3*Math.PI/2;
       }
       rotate(rotateval);
@@ -147,9 +163,14 @@ class Boid {
       this.position.y < food[1]+collisionRadius && this.position.y > food[1]-collisionRadius && drawFood == true) {
         drawFood = false;
         console.log("chomp");
-      }
+    }
+    if (drawFood == false) this.gotkonstant = false;
     //console.log(this.position.x, " vs ", food[0]);
+    
   }
+
+
+
 
   applyForce(force) {
     // We could add mass here if we want A = F / M
