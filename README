@@ -2,7 +2,9 @@ TITLE: P4: Fishtank
 
 DESCRIPTION
 This program creates a simple simulation of a fishtank from a top-down view, where the user can drop in food pellets, and the fish 
-will swim to eat them.
+will swim towards them to eat them.
+
+ADDITIONAL OBJECTS: food pellet and fish tank
 
 ARTIST'S STATEMENT
 My objective was to simulate a small body of water with fish in it, including the ability to drop in food and also predators that would chase the fish around.  I did not have time to implement the predators.  As with P3, the most difficult part of this assignment was in trying to understand how the starter code worked.  The base starter code was quite complex, and Daniel Shiffman's way of using vectors to represent boid velocity and position (instead of just a scalar and a point) is extremely confusing to me.  I was given this assignent, and expected to understand the code and use that understanding to modify the code for the assignment in 2 days.  This was not enough time.  Ideally, I would have had at least one week.  I needed much more time to understand the vector movement system.  This resulting project was what I was able to create in 2 days. 
