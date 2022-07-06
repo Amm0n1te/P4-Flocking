@@ -15,7 +15,7 @@ function preload() {
 
 function setup() {
   createCanvas(640, 360);
-  createP("Click within the tank to place food pellets.");
+  createP("Click within the tank to place food pellets.<br>Fish want to eat the food pellets, but are afraid of the cursor if the cursor is in the tank.");
   animation.push(spritesheet.get(0, 0, 100, 200));
   animation.push(spritesheet.get(100, 0, 100, 200));
 
@@ -122,7 +122,8 @@ class Boid {
     this.flock(boids);
     //circle(450, height/2, 30);
     //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
-    //this.applyForce(this.flee( createVector(mouseX, mouseY) ));
+    if (mouseX > tankleft && mouseX < tankright && mouseY > tankup && mouseY < tankdown) this.applyForce(this.flee( createVector(mouseX, mouseY) ));
+    this.avoid(boids);
     if (drawFood) {  
       this.update();
       this.render();
@@ -245,15 +246,17 @@ class Boid {
   }
 
   flee(target) {
-    let desired = p5.Vector.add(target, this.position);
-    push();
+    let desired = p5.Vector.sub(target, this.position);
+    /*push();
+    stroke(255, 255, 255);
     translate(width/2, height/2);
-    line(0, 0, desired.x*5, desired.y*5);
-    pop();
+    line(0, 0, desired.x/8, desired.y/8);
+    pop();*/
     desired.normalize();
-    desired.mult(this.maxspeed);
+    desired.mult(-this.maxspeed);
     let steer = p5.Vector.add(desired, this.velocity);
-    steer.limit(this.maxforce);
+    steer.limit(this.maxspeed);
+    if (steer.mag < -this.maxspeed) steer.mag = -this.maxspeed;
     return steer;
   }
 
