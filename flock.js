@@ -15,7 +15,7 @@ function preload() {
 
 function setup() {
   createCanvas(640, 360);
-  createP("Click to place food pellets.");
+  createP("Click within the tank to place food pellets.");
   animation.push(spritesheet.get(0, 0, 100, 200));
   animation.push(spritesheet.get(100, 0, 100, 200));
 
@@ -34,6 +34,7 @@ let tankdown;
 let tankleft;
 let tankight;
 let animspeed = 0.1;
+let borderbuffer = 20;
 function draw() {
   background(133, 133, 133);
   fill(0, 102, 133);
@@ -63,7 +64,7 @@ function mouseDragged() {
 }
 
 function mouseClicked() {
-  if (mouseX > tankleft && mouseX < tankright && mouseY > tankup && mouseY < tankdown) {
+  if (mouseX > tankleft+borderbuffer && mouseX < tankright-borderbuffer && mouseY > tankup+borderbuffer && mouseY < tankdown-borderbuffer) {
     clicked = true;
     drawFood = true;
     food[0] = mouseX;
@@ -121,8 +122,13 @@ class Boid {
     this.flock(boids);
     //circle(450, height/2, 30);
     //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
+    //this.applyForce(this.flee( createVector(mouseX, mouseY) ));
     if (drawFood) {  
-      push();
+      this.update();
+      this.render();
+      this.applyForce(this.seek( createVector(food[0], food[1]) ));
+      //wrote this massive block of code because seek wasn't working properly, but now it magically works.  I'm afraid to delete all this effort now, even with github
+      /*push();
       translate(this.position.x, this.position.y);
       let rotateval = 0;
       let seekspeed = 2; //applied as a multiplier to default speed 1
@@ -165,7 +171,7 @@ class Boid {
       }
       rotate(rotateval);
       image(animation[floor(animIndex)], 0, 0)
-      pop();
+      pop();*/
     }
     else {
       this.update();
@@ -180,7 +186,6 @@ class Boid {
     }
     if (drawFood == false) this.gotkonstant = false;
     //console.log(this.position.x, " vs ", food[0]);
-    
   }
 
 
@@ -222,12 +227,33 @@ class Boid {
   // STEER = DESIRED MINUS VELOCITY
   seek(target) {
     let desired = p5.Vector.sub(target,this.position);  // A vector pointing from the location to the target
+    
+    //uncomment to see desired trajectory lines
+    /*
+    push();
+    translate(width/2, height/2);
+    line(0, 0, desired.x*5, desired.y*5);
+    pop();
+    */
     // Normalize desired and scale to maximum speed
     desired.normalize();
     desired.mult(this.maxspeed);
     // Steering = Desired minus Velocity
     let steer = p5.Vector.sub(desired,this.velocity);
     steer.limit(this.maxforce);  // Limit to maximum steering force
+    return steer;
+  }
+
+  flee(target) {
+    let desired = p5.Vector.add(target, this.position);
+    push();
+    translate(width/2, height/2);
+    line(0, 0, desired.x*5, desired.y*5);
+    pop();
+    desired.normalize();
+    desired.mult(this.maxspeed);
+    let steer = p5.Vector.add(desired, this.velocity);
+    steer.limit(this.maxforce);
     return steer;
   }
 
@@ -332,16 +358,16 @@ class Boid {
 
   avoid(boids) {
     let steer = createVector(0, 0);
-    if (this.position.x <= tankleft+20) {
+    if (this.position.x <= tankleft+borderbuffer) {
       steer.add(createVector(1, 0));
     }
-    if (this.position.x > tankright-20) {
+    if (this.position.x > tankright-borderbuffer) {
       steer.add(createVector(-1, 0));
     }
-    if (this.position.y < tankup+20) {
+    if (this.position.y < tankup+borderbuffer) {
       steer.add(createVector(0, 1));
     }
-    if (this.position.y > tankdown-20) { 
+    if (this.position.y > tankdown-borderbuffer) { 
       steer.add(createVector(0, -1));
     }
     return steer;
