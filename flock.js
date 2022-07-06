@@ -15,7 +15,7 @@ function preload() {
 
 function setup() {
   createCanvas(640, 360);
-  createP("Click within the tank to place food pellets.<br>Fish want to eat the food pellets, but are afraid of the cursor if the cursor is in the tank.");
+  createP("Click within the tank to place food pellets (pellets will be placed under the hand).<br>Fish want to eat the food pellets, but are afraid of the cursor if the cursor is in the tank.");
   animation.push(spritesheet.get(0, 0, 100, 200));
   animation.push(spritesheet.get(100, 0, 100, 200));
 
@@ -50,8 +50,27 @@ function draw() {
   animIndex+= animspeed;
   if (animIndex >= 2) animIndex = 0;
   flock.run();
+  if (mouseX < width && mouseY < height) drawhand(mouseX, mouseY);
   clicked = false;
   //image(spritesheet.get(100, 0, 100, 200), 0, 0);
+}
+
+function drawhand(x, y) {
+  console.log("GIANT HAND! SWIM FOR YOUR LIVES!");
+  push();
+
+  let shorten = 1;
+  if (clicked) shorten = 4;
+  stroke(0, 0, 0);
+  fill(83, 12, 59);
+  rect(x-20, y-10, 40);
+  rect(x-20, y-45, 8, 35/shorten);
+  rect(x-10, y-50, 8, 40/shorten);
+  rect(x, y-45, 8, 35/shorten);
+  rect(x+10, y-38, 8, 28/shorten);
+  rect(x-43, y+5, 23, 11/shorten);
+
+  pop();
 }
 
 
@@ -64,6 +83,7 @@ function mouseDragged() {
 }
 
 function mouseClicked() {
+  console.log("plop");
   if (mouseX > tankleft+borderbuffer && mouseX < tankright-borderbuffer && mouseY > tankup+borderbuffer && mouseY < tankdown-borderbuffer) {
     clicked = true;
     drawFood = true;
@@ -85,7 +105,7 @@ class Flock {
     for (let i = 0; i < this.boids.length; i++) {
       this.boids[i].run(this.boids);  // Passing the entire list of boids to each boid individually
     }
-    translate(width/2, height/2);
+    //translate(width/2, height/2);
     //line(0, 0, this.boids[0].velocity.x*20, this.boids[0].velocity.y*20);
   }
 
