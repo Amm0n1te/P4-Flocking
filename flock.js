@@ -62,7 +62,7 @@ function drawhand(x, y) {
   let shorten = 1;
   if (clicked) shorten = 4;
   stroke(0, 0, 0);
-  fill(83, 12, 59);
+  fill(0,0,0);
   rect(x-20, y-10, 40);
   rect(x-20, y-45, 8, 35/shorten);
   rect(x-10, y-50, 8, 40/shorten);
