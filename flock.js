@@ -15,7 +15,7 @@ function preload() {
 
 function setup() {
   createCanvas(640, 360);
-  createP("Drag the mouse to generate new boids.");
+  createP("Click to place food pellets.");
   animation.push(spritesheet.get(0, 0, 100, 200));
   animation.push(spritesheet.get(100, 0, 100, 200));
 
@@ -41,6 +41,7 @@ function draw() {
   tankdown = height-(height/tankproportion);
   tankleft = width/tankproportion;
   tankright = width-(width/tankproportion);
+  stroke(0, 0, 0);
   rect(width/tankproportion, height/tankproportion, width-2*(width/tankproportion), height-2*(height/tankproportion));
   fill(82, 48, 2);
   noStroke();
@@ -83,6 +84,8 @@ class Flock {
     for (let i = 0; i < this.boids.length; i++) {
       this.boids[i].run(this.boids);  // Passing the entire list of boids to each boid individually
     }
+    translate(width/2, height/2);
+    //line(0, 0, this.boids[0].velocity.x*20, this.boids[0].velocity.y*20);
   }
 
   addBoid(b) {
