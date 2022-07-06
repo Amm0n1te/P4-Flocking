@@ -3,6 +3,7 @@ let spritesheet;
 let animation = [];
 let food = [-1, -1, 10];   //food[x position,  y position,  pellet radius]
 let drawFood = false;
+let clicked = false;
 
 function preload() {
   //frameRate(5);
@@ -20,7 +21,7 @@ function setup() {
 
   flock = new Flock();
   // Add an initial set of boids into the system
-  for (let i = 0; i < 1; i++) {
+  for (let i = 0; i < 10; i++) {
     let b = new Boid(width / 2,height / 2);
     flock.addBoid(b);
   }
@@ -32,6 +33,7 @@ let tankup;
 let tankdown;
 let tankleft;
 let tankight;
+let animspeed = 0.1;
 function draw() {
   background(133, 133, 133);
   fill(0, 102, 133);
@@ -43,9 +45,10 @@ function draw() {
   fill(82, 48, 2);
   noStroke();
   if (drawFood) circle(food[0], food[1], food[2]);
-  animIndex+= 0.2;
+  animIndex+= animspeed;
   if (animIndex >= 2) animIndex = 0;
   flock.run();
+  clicked = false;
   //image(spritesheet.get(100, 0, 100, 200), 0, 0);
 }
 
@@ -60,6 +63,7 @@ function mouseDragged() {
 
 function mouseClicked() {
   if (mouseX > tankleft && mouseX < tankright && mouseY > tankup && mouseY < tankdown) {
+    clicked = true;
     drawFood = true;
     food[0] = mouseX;
     food[1] = mouseY;
@@ -115,40 +119,46 @@ class Boid {
     //circle(450, height/2, 30);
     //this.applyForce(this.seek( (createVector(150, height/2)).mult(10) ));
     if (drawFood) {  
-      console.log(this.oldadjacent);
       push();
       translate(this.position.x, this.position.y);
       let rotateval = 0;
-      let seekspeed = 1; //applied as a multiplier to default speed 1
+      let seekspeed = 2; //applied as a multiplier to default speed 1
       let opposite = Math.abs(this.position.x - food[0]);
       let adjacent = Math.abs(this.position.y - food[1]);
-      if (!this.gotkonstant) {
+      if (!this.gotkonstant || clicked) {
         this.konstant = Math.sqrt(Math.pow(adjacent, 2) + Math.pow(opposite, 2));
         this.oldopposite = Math.abs(this.position.x - food[0]);
         this.oldadjacent = Math.abs(this.position.y - food[1]);
         this.gotkonstant = true;
+        animspeed = 0.3;
       }
+
       if (food[0] > this.position.x && food[1] < this.position.y) { //case 1: food top right
         rotateval = Math.atan( opposite/adjacent );
         this.position.x += (this.oldopposite/this.konstant) * seekspeed; 
         this.position.y -= (this.oldadjacent/this.konstant) * seekspeed;
-        //this.position.y += (  this.position.y / Math.sqrt(Math.pow(this.position.x, 2) + Math.pow(this.position.y, 2))  ) * seekspeed;
         //console.log("case 1");
       }  
       else if (food[0] > this.position.x && food[1] > this.position.y) { //case 2: food bottom right
         rotateval = Math.atan( adjacent/opposite );
         //console.log("case 2");
         rotateval += Math.PI/2;
+        this.position.x += (this.oldopposite/this.konstant) * seekspeed; 
+        this.position.y += (this.oldadjacent/this.konstant) * seekspeed;
       }
       else if (food[0] < this.position.x && food[1] > this.position.y) { //case 3: food bottom left
         rotateval = Math.atan( opposite/adjacent );
         //console.log("case 3");
         rotateval += Math.PI;
+        this.position.x -= (this.oldopposite/this.konstant) * seekspeed; 
+        this.position.y += (this.oldadjacent/this.konstant) * seekspeed; 
       } 
       else if (food[0] < this.position.x && food[1] < this.position.y) { //case 4: food top left
         //console.log("case 4");
         rotateval = Math.atan( adjacent/opposite );
         rotateval += 3*Math.PI/2;
+        this.position.x -= (this.oldopposite/this.konstant) * seekspeed; 
+        this.position.y -= (this.oldadjacent/this.konstant) * seekspeed; 
       }
       rotate(rotateval);
       image(animation[floor(animIndex)], 0, 0)
@@ -163,6 +173,7 @@ class Boid {
       this.position.y < food[1]+collisionRadius && this.position.y > food[1]-collisionRadius && drawFood == true) {
         drawFood = false;
         console.log("chomp");
+        animspeed = 0.1;
     }
     if (drawFood == false) this.gotkonstant = false;
     //console.log(this.position.x, " vs ", food[0]);
